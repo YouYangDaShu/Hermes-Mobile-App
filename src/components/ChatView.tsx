@@ -5,7 +5,6 @@ import type { DragEvent } from 'react'
 import { BotAvatar } from './BotAvatar'
 import { MessageCard, MarkdownContent } from './MarkdownContent'
 import type { ToolActivity } from '../App'
-import { applySlashCompletion } from '../slash-routing'
 import { SCROLL_FOLLOW_THRESHOLD, shouldStickToBottom } from '../scroll-follow'
 import { formatResponseStats } from '../message-stats'
 import { useEdgeSwipeBack } from '../edge-swipe'
@@ -167,38 +166,38 @@ export function ChatView({ session, conversationLoading, messages, settledAssist
   const editMessage = (text: string) => { setEditRequest({ text, nonce: Date.now() }) }
 
   return <main ref={shellRef} className="app chat-shell" onDragOver={onDragOver} onDrop={onDrop} onDragLeave={() => setDraggingFiles(false)}>
-    {draggingFiles && <div className="file-drop-overlay" aria-live="polite"><div><Paperclip size={24}/><b>Drop files to upload to Hermes</b><span>Documents stay on the host for Hermes to read</span></div></div>}
+    {draggingFiles && <div className="file-drop-overlay" aria-live="polite"><div><Paperclip size={24}/><b>拖入文件上传至 Hermes</b><span>文件将安全上传至主控端供 Hermes 读取分析</span></div></div>}
     <header className="chat-header">
-      <button className="round-control" onClick={back} aria-label="Back"><ArrowDown size={18} className="back-chevron"/></button>
-      <div className="chat-title"><button className="chat-identity-button" onClick={openProfile} aria-label={`Open ${botName} settings`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="header"/><span><b>{botName}</b><small>{botName} · {sending ? 'Working' : modelLabel || 'Hermes default'}</small></span></button></div>
-      <button className="round-control" onClick={refresh} aria-label="Refresh conversation"><RotateCw size={16}/></button>
+      <button className="round-control" onClick={back} aria-label="返回"><ArrowDown size={18} className="back-chevron"/></button>
+      <div className="chat-title"><button className="chat-identity-button" onClick={openProfile} aria-label={`打开 ${botName} 设置`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="header"/><span><b>{botName}</b><small>{botName} · {sending ? '思考执行中' : modelLabel || 'Hermes 默认'}</small></span></button></div>
+      <button className="round-control" onClick={refresh} aria-label="刷新对话"><RotateCw size={16}/></button>
     </header>
 
     {visibleError && <div className="chat-error"><span>{visibleError}</span><button onClick={() => setControlError('')}><X size={14}/></button></div>}
 
     <div className="thread-scroll" ref={threadRef} onScroll={onScroll} onTouchStart={onThreadTouchStart} onTouchMove={onThreadTouchMove} onTouchEnd={onThreadTouchEnd}>
       <div className="thread-content" ref={contentRef}>
-        {(pullDistance > 8 || pullRefreshing) && <div className="chat-pull-cue" style={{ height: `${pullRefreshing ? 34 : pullDistance}px` }}><RotateCw size={14} className={pullRefreshing ? 'pull-refresh-spinner' : ''}/><span>{pullRefreshing ? 'Refreshing…' : pullDistance >= 48 ? 'Release to refresh' : 'Pull to refresh'}</span></div>}
-        {showConversationLoading && <section className="chat-empty-state conversation-loading" aria-live="polite" aria-label={`Loading ${botName} conversation`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="welcome"/><h1>{botName.toUpperCase()}</h1><p>{botName} · {modelLabel || 'Hermes Desktop'}</p><LoadingSpinner/></section>}
-        {showEmptyState && <section className="chat-empty-state" aria-label={`Start a conversation with ${botName}`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="welcome"/><h1>{botName.toUpperCase()}</h1><p>Say something to get started.</p></section>}
+        {(pullDistance > 8 || pullRefreshing) && <div className="chat-pull-cue" style={{ height: `${pullRefreshing ? 34 : pullDistance}px` }}><RotateCw size={14} className={pullRefreshing ? 'pull-refresh-spinner' : ''}/><span>{pullRefreshing ? '正在刷新…' : pullDistance >= 48 ? '松开立即刷新' : '下拉刷新'}</span></div>}
+        {showConversationLoading && <section className="chat-empty-state conversation-loading" aria-live="polite" aria-label={`正在加载 ${botName} 对话`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="welcome"/><h1>{botName.toUpperCase()}</h1><p>{botName} · {modelLabel || 'Hermes Desktop'}</p><LoadingSpinner/></section>}
+        {showEmptyState && <section className="chat-empty-state" aria-label={`与 ${botName} 开始对话`}><BotAvatar profile={botProfile} fallbackName={session.profile} variant="welcome"/><h1>{botName.toUpperCase()}</h1><p>发送消息即可开启对话。</p></section>}
         {messages.map(message => <MessageCard key={message.id} message={message} onEdit={editMessage} profile={botProfile} fallbackName={session.profile} revealTimestamp={message.role === 'assistant' && revealedTimestampId === message.id} onRevealTimestamp={() => setRevealedTimestampId(current => current === message.id ? null : message.id)}/>)}
         {toolActivities.map(activity => <ToolActivityRow activity={activity} key={activity.id}/>)}
-        {showActiveAssistant && <article className="message-row assistant-row live-response"><div className="assistant-message-layout"><BotAvatar profile={botProfile} fallbackName={session.profile} variant="message"/><div className="assistant-message-content">{sending && !streaming && <div className="live-label"><span className="stream-pulse"/> Thinking</div>}{activeAssistantText && <MarkdownContent>{activeAssistantText}</MarkdownContent>}<div className={`response-stats ${settledStats ? '' : 'response-stats-placeholder'}`} aria-label={settledStats ? 'Response generation statistics' : undefined} aria-hidden={settledStats ? undefined : true}>{settledStats || '\u00a0'}</div></div></div></article>}
+        {showActiveAssistant && <article className="message-row assistant-row live-response"><div className="assistant-message-layout"><BotAvatar profile={botProfile} fallbackName={session.profile} variant="message"/><div className="assistant-message-content">{sending && !streaming && <div className="live-label"><span className="stream-pulse"/> 思考中</div>}{activeAssistantText && <MarkdownContent>{activeAssistantText}</MarkdownContent>}<div className={`response-stats ${settledStats ? '' : 'response-stats-placeholder'}`} aria-label={settledStats ? '响应指标统计' : undefined} aria-hidden={settledStats ? undefined : true}>{settledStats || '\u00a0'}</div></div></div></article>}
       </div>
     </div>
 
-    {!following && <button className="latest-button" onClick={() => scrollToLatest()}><ArrowDown size={15}/><span>Latest{unreadBelow ? ` · ${unreadBelow}` : ''}</span></button>}
+    {!following && <button className="latest-button" onClick={() => scrollToLatest()}><ArrowDown size={15}/><span>最新{unreadBelow ? ` · ${unreadBelow}` : ''}</span></button>}
 
     <Composer session={session} profiles={profiles} sending={sending} draggingFiles={draggingFiles} editRequest={editRequest} dropFilesRef={dropFilesRef} onControlError={setControlError} onModelLabel={setModelLabel} onSessionModelChange={onSessionModelChange} submit={submit} submitVoice={submitVoice} stop={stop}/>
   </main>
 }
 
 function LoadingSpinner() {
-  return <span className="conversation-spinner" role="status" aria-label="Loading"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></span>
+  return <span className="conversation-spinner" role="status" aria-label="加载中"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></span>
 }
 
 function ToolActivityRow({ activity }: { activity: ToolActivity }) {
   const running = activity.status === 'running'
   const failed = activity.status === 'failed'
-  return <div className={`live-tool ${failed ? 'failed' : ''}`}><span className={running ? 'tool-spinner' : 'tool-state'}>{running ? '⋯' : failed ? '!' : '✓'}</span><span><b>{activity.name}</b><small>{running ? 'running…' : failed ? 'failed' : activity.summary || 'done'}</small></span>{activity.duration_s != null && <time>{activity.duration_s.toFixed(1)}s</time>}</div>
+  return <div className={`live-tool ${failed ? 'failed' : ''}`}><span className={running ? 'tool-spinner' : 'tool-state'}>{running ? '⋯' : failed ? '!' : '✓'}</span><span><b>{activity.name}</b><small>{running ? '执行中…' : failed ? '失败' : activity.summary || '已完成'}</small></span>{activity.duration_s != null && <time>{activity.duration_s.toFixed(1)}s</time>}</div>
 }

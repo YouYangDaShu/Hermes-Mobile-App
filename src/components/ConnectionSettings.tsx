@@ -26,17 +26,17 @@ type Props = {
 }
 
 const themes: Array<{ id: Theme; label: string; description: string }> = [
-  { id: 'dark', label: 'OLED dark', description: 'Deep black with violet accents' },
-  { id: 'light', label: 'Light', description: 'Cool, layered blue-gray surfaces' },
-  { id: 'grey', label: 'Graphite', description: 'Neutral grey with cool surfaces' },
-  { id: 'aurora', label: 'Aurora', description: 'Midnight navy with teal-violet glow' },
+  { id: 'dark', label: 'OLED 纯黑', description: '深邃极夜配微紫点缀' },
+  { id: 'light', label: '浅色', description: '层次分明的冷灰蓝面板' },
+  { id: 'grey', label: '石墨灰', description: '极简中性灰质感' },
+  { id: 'aurora', label: '极光', description: '深海夜空配青紫流光' },
 ]
 
 const external = (href: string) => ({ href, onClick: (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); void invoke('open_external_url', { url: href }).catch(() => window.open(href, '_blank', 'noopener,noreferrer')) } })
 
 function Header({ title, subtitle, back, compact = false }: { title: string; subtitle: string; back: () => void; compact?: boolean }) {
   return <header className={`panel-head connection-head${compact ? ' compact' : ''}`}>
-    <button className="back-button" onClick={back} aria-label="Back"><ArrowLeft size={19}/></button>
+    <button className="back-button" onClick={back} aria-label="返回"><ArrowLeft size={19}/></button>
     {!compact && <div><h2>{title}</h2><p>{subtitle}</p></div>}
   </header>
 }
@@ -47,26 +47,26 @@ function AboutHermesMobile({ back }: { back: () => void }) {
   return <main ref={shellRef} className="app panel about-screen">
     <Header title="" subtitle="" back={back} compact/>
     <section className="about-hero">
-      <div className="about-logo-card"><img src={HermesMobileLogo} alt="Hermes Mobile logo"/></div>
-      <h1>Hermes Mobile</h1>
-      <p className="about-meta">A companion for Hermes Desktop <i aria-hidden="true">|</i> Version 0.1.1</p>
-      <span>Control your Hermes workspace from wherever you are.</span>
+      <div className="about-logo-card"><img src={HermesMobileLogo} alt="Hermes Mobile 徽标"/></div>
+      <h1>Hermes 移动端</h1>
+      <p className="about-meta">Hermes Agent 随身控制台 <i aria-hidden="true">|</i> 版本 0.1.1</p>
+      <span>随时随地掌握你的 Hermes Agent 工作空间。</span>
     </section>
     <section className="about-story">
-      <p>I fell in love with Hermes after using the new Bot capabilities, and started building the mobile client I wanted: a polished, host-first companion for controlling your Hermes Bots from your phone.</p>
-      <p>Your computer &amp; hermes setup still remains the authority for your agents, credentials, approvals, tools, sessions, and files. Hermes Mobile is the mission-control surface in your pocket, similar to Grok Bot! Hope you enjoy it as much as I do.</p>
-      <p className="about-signoff">- Creator <a {...external('https://stestein.com/')}>SteStein.com</a></p>
+      <p>Hermes 赋予了 Agent 强大的自主行动与工具调用能力。本应用专为移动端打造，让你在手机上即可高效掌控与调度所有的 Hermes 智能体。</p>
+      <p>你的主机与服务器始终是模型、凭证、审批、工具、上下文记忆与文件的核心掌管者；Hermes 移动端则是随身的一体化控制台。</p>
+      <p className="about-signoff">- 原作者 <a {...external('https://stestein.com/')}>SteStein.com</a> · 幽羊团队汉化与定制</p>
     </section>
-    <section className="about-links" aria-label="Hermes Mobile and Hermes links">
-      <p>HERMES MOBILE</p>
-      <a {...external('https://github.com/CodeUpdaterBot/Hermes-Mobile-App')}><GitBranch size={18}/><span><b>Hermes Mobile on GitHub</b><small>Source, releases, and feedback</small></span><ExternalLink size={16}/></a>
-      <p>HERMES</p>
-      <a {...external('https://hermes-agent.nousresearch.com/')}><Globe2 size={18}/><span><b>Hermes Agent</b><small>Official website</small></span><ExternalLink size={16}/></a>
-      <a {...external('https://hermes-agent.nousresearch.com/docs/')}><Globe2 size={18}/><span><b>Documentation</b><small>Guides for hosts, gateways, and Bots</small></span><ExternalLink size={16}/></a>
-      <a {...external('https://github.com/NousResearch/hermes-agent')}><GitBranch size={18}/><span><b>Hermes Agent on GitHub</b><small>Open-source agent runtime</small></span><ExternalLink size={16}/></a>
-      <a {...external('https://discord.gg/NousResearch')}><Heart size={18}/><span><b>Nous Research Discord</b><small>Community and support</small></span><ExternalLink size={16}/></a>
+    <section className="about-links" aria-label="相关链接">
+      <p>HERMES 移动端</p>
+      <a {...external('https://github.com/CodeUpdaterBot/Hermes-Mobile-App')}><GitBranch size={18}/><span><b>Hermes Mobile 官方仓库</b><small>源码、版本发布与反馈</small></span><ExternalLink size={16}/></a>
+      <p>HERMES ECOSYSTEM</p>
+      <a {...external('https://hermes-agent.nousresearch.com/')}><Globe2 size={18}/><span><b>Hermes Agent 官网</b><small>权威站点</small></span><ExternalLink size={16}/></a>
+      <a {...external('https://hermes-agent.nousresearch.com/docs/')}><Globe2 size={18}/><span><b>开发文档</b><small>网关、工具与智能体指南</small></span><ExternalLink size={16}/></a>
+      <a {...external('https://github.com/NousResearch/hermes-agent')}><GitBranch size={18}/><span><b>Hermes Agent GitHub</b><small>开源 Agent 运行时</small></span><ExternalLink size={16}/></a>
+      <a {...external('https://discord.gg/NousResearch')}><Heart size={18}/><span><b>Nous Research Discord</b><small>社区与技术支持</small></span><ExternalLink size={16}/></a>
     </section>
-    <p className="about-footer">An independent community project, unaffiliated with Nous Research or Hermes Agent. Built with appreciation for the Hermes community.</p>
+    <p className="about-footer">基于 Nous Research 开源生态打造的社区独立移动客户端。</p>
   </main>
 }
 
@@ -85,7 +85,7 @@ function PairingSettings({ back, onPaired, onPairingBusy, initialEndpoint }: { b
   const probeEpochRef = useRef(0)
   const testGateway = async () => {
     const value = gatewayUrl.trim().replace(/\/$/, '')
-    if (!value) { setResult({ tone: 'error', text: 'Enter your Windows PC’s Tailscale or HTTPS gateway URL first.' }); return }
+    if (!value) { setResult({ tone: 'error', text: '请先输入 Hermes 网关地址（内网 IP、Tailscale 或 HTTPS 域名）。' }); return }
     const probeEpoch = ++probeEpochRef.current
     setChecking(true); setResult(null); setVerifiedEndpoint(null); setPasswordAuth(false); setPassword('')
     try {
@@ -94,17 +94,17 @@ function PairingSettings({ back, onPaired, onPairingBusy, initialEndpoint }: { b
       const host = new URL(value).hostname.toLowerCase()
       const loopback = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]'
       if (!loopback && status.auth_required !== true) {
-        setResult({ tone: 'error', text: 'This remote gateway is reachable but does not require authentication. Secure remote pairing requires an authenticated Hermes gateway.' })
+        setResult({ tone: 'error', text: '该远程网关可达但未开启鉴权认证。为了安全，公网连接建议开启鉴权。' })
         return
       }
       const supportsPassword = supportsBasicAuth(status.auth_providers)
       setPasswordAuth(supportsPassword)
-      const pkce = status.auth_flows?.includes('native_pkce') ? ' Secure device sign-in is available.' : ''
-      if (!status.auth_flows?.includes('native_pkce')) throw new Error('This Hermes gateway does not advertise secure native phone sign-in.')
+      const pkce = status.auth_flows?.includes('native_pkce') ? ' 支持原生设备安全登录。' : ''
+      if (!status.auth_flows?.includes('native_pkce')) throw new Error('该网关未启用支持移动端原生鉴权的流程。')
       setVerifiedEndpoint(value)
-      setResult({ tone: 'success', text: `Hermes ${status.version || 'gateway'} is reachable. Authentication is required.${pkce}` })
+      setResult({ tone: 'success', text: `Hermes 网关 (${status.version || '服务'}) 连接成功。${pkce}` })
     } catch (error) {
-      if (probeEpoch === probeEpochRef.current) setResult({ tone: 'error', text: errorMessage(error, 'Could not reach this Hermes gateway.') })
+      if (probeEpoch === probeEpochRef.current) setResult({ tone: 'error', text: errorMessage(error, '无法连接至该 Hermes 网关。') })
     } finally { if (probeEpoch === probeEpochRef.current) setChecking(false) }
   }
   const completeSignIn = async () => {
@@ -114,53 +114,51 @@ function PairingSettings({ back, onPaired, onPairingBusy, initialEndpoint }: { b
     try {
       if (passwordAuth) await passwordSignIn(verifiedEndpoint, username.trim(), password)
       else await nativeSignIn(verifiedEndpoint)
-      // Yield after the Android native credential write before opening the next
-      // native bridge call. This avoids concurrent Keystore access on resume.
       await new Promise(resolve => window.setTimeout(resolve, 150))
       setPassword('')
       await onPaired(verifiedEndpoint)
       back()
-    } catch (error) { setResult({ tone: 'error', text: errorMessage(error, 'Secure Hermes sign-in failed.') }) }
+    } catch (error) { setResult({ tone: 'error', text: errorMessage(error, 'Hermes 安全登录失败。') }) }
     finally { setPassword(''); setSigningIn(false); onPairingBusy(false) }
   }
   const copyChecklist = async () => {
     try {
-      await navigator.clipboard.writeText('Hermes Mobile Android pairing\n1. Join the Windows PC and Android phone to the same Tailscale tailnet.\n2. Start an authenticated Hermes gateway on the Windows PC.\n3. On Android, enter the PC’s Tailscale HTTPS/HTTP gateway URL — never 127.0.0.1.\n4. Verify reachability, then authenticate with the gateway’s supported session token or OAuth flow.\n5. Keep port 9119 private; do not expose it directly to the public internet.')
+      await navigator.clipboard.writeText('Hermes 移动端配对指南\n1. 确保服务端已启动 hermes serve\n2. 手机与主机保持同一局域网，或通过 FRP 穿透与 HTTPS 反代提供公网连接\n3. 在手机端输入网关地址（如 https://hermes.youyangai.top），切勿填写 127.0.0.1\n4. 点击测试网关连通性，并通过凭证完成鉴权握手\n5. 握手成功后即可随时随地管理智能体与会话')
       setCopied(true); window.setTimeout(() => setCopied(false), 1800)
-    } catch { setResult({ tone: 'error', text: 'Clipboard access is unavailable. You can still follow the checklist below.' }) }
+    } catch { setResult({ tone: 'error', text: '剪贴板访问受限，请直接参考下方配置步骤。' }) }
   }
   return <main ref={shellRef} className="app panel pairing-screen">
-    <Header title="Security & pairing" subtitle="Private access for your mobile device" back={back}/>
+    <Header title="安全与配对" subtitle="为移动设备配置安全网关与访问权限" back={back}/>
     <section className="pairing-hero">
       <div className="pairing-icon"><ShieldCheck size={28}/></div>
-      <div><span>RECOMMENDED</span><h3>Pair over Tailscale</h3><p>Keep your Hermes gateway private. Your phone joins your Tailnet instead of exposing port 9119 to the public internet.</p></div>
+      <div><span>推荐配置</span><h3>远程网关与穿透</h3><p>保持 Hermes 网关安全。可通过私有内网、Tailscale 或 FRP + HTTPS 反代安全连接，避免直接在公网裸奔未加密端口。</p></div>
     </section>
     <section className="pairing-card">
-      <div className="pairing-card-title"><Wifi size={18}/><div><b>Verify your Windows gateway</b><small>Checks the real Hermes gateway status before any sign-in.</small></div></div>
-      <label className="pairing-field"><span>GATEWAY URL</span><input value={gatewayUrl} onChange={event => { setGatewayUrl(event.target.value); probeEpochRef.current += 1; setVerifiedEndpoint(null); setPasswordAuth(false); setPassword('') }} placeholder="https://your-pc.tailnet.ts.net:9119" inputMode="url" autoCapitalize="none" autoCorrect="off"/></label>
-      <button className="primary wide pairing-test" disabled={checking || signingIn} aria-busy={checking} onClick={() => void testGateway()}>{checking ? <><LoaderCircle className="pairing-spinner" size={17}/> Checking gateway…</> : <>Test gateway</>}</button>
+      <div className="pairing-card-title"><Wifi size={18}/><div><b>验证 Hermes 网关</b><small>在连接与登录前检测 Hermes 服务的真实在线状态。</small></div></div>
+      <label className="pairing-field"><span>网关地址 (GATEWAY URL)</span><input value={gatewayUrl} onChange={event => { setGatewayUrl(event.target.value); probeEpochRef.current += 1; setVerifiedEndpoint(null); setPasswordAuth(false); setPassword('') }} placeholder="https://hermes.youyangai.top 或 http://192.168.x.x:9119" inputMode="url" autoCapitalize="none" autoCorrect="off"/></label>
+      <button className="primary wide pairing-test" disabled={checking || signingIn} aria-busy={checking} onClick={() => void testGateway()}>{checking ? <><LoaderCircle className="pairing-spinner" size={17}/> 正在检测网关…</> : <>测试网关连通性</>}</button>
       {verifiedEndpoint && passwordAuth && <div className="pairing-credentials">
-        <label className="pairing-field"><span>USERNAME</span><input value={username} onChange={event => setUsername(event.target.value)} placeholder="Hermes gateway username" autoCapitalize="none" autoCorrect="off" autoComplete="username"/></label>
-        <label className="pairing-field"><span>PASSWORD</span><input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Hermes gateway password" autoComplete="current-password"/></label>
-        <p className="pairing-note">Used once to obtain a revocable Hermes credential. The password itself is not saved.</p>
+        <label className="pairing-field"><span>用户名 (USERNAME)</span><input value={username} onChange={event => setUsername(event.target.value)} placeholder="Hermes 网关用户名" autoCapitalize="none" autoCorrect="off" autoComplete="username"/></label>
+        <label className="pairing-field"><span>密码 (PASSWORD)</span><input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Hermes 网关密码" autoComplete="current-password"/></label>
+        <p className="pairing-note">仅在换取受控访问令牌时使用一次，明文密码不会保存在本地。</p>
       </div>}
-      {verifiedEndpoint && <button className="secondary wide pairing-signin" disabled={signingIn || (passwordAuth && (!username.trim() || !password))} aria-busy={signingIn} onClick={() => void completeSignIn()}>{signingIn ? <><LoaderCircle className="pairing-spinner" size={17}/> Signing in and connecting…</> : <>{passwordAuth ? 'Sign in & connect' : 'Continue to secure sign-in'}</>}</button>}
+      {verifiedEndpoint && <button className="secondary wide pairing-signin" disabled={signingIn || (passwordAuth && (!username.trim() || !password))} aria-busy={signingIn} onClick={() => void completeSignIn()}>{signingIn ? <><LoaderCircle className="pairing-spinner" size={17}/> 正在登录并连接…</> : <>{passwordAuth ? '登录并连接' : '继续完成安全连接'}</>}</button>}
       {result && <p className={`pairing-result ${result.tone}`}>{result.tone === 'success' ? <CheckCircle2 size={16}/> : <LockKeyhole size={16}/>}<span>{result.text}</span></p>}
-      <p className="pairing-note">Never enter <code>127.0.0.1</code> or <code>localhost</code> on your phone—those point back to the phone itself.</p>
+      <p className="pairing-note">提示：切勿在手机上输入 <code>127.0.0.1</code> 或 <code>localhost</code>，那会指向手机自身。请填写局域网 IP 或公网反代域名。</p>
     </section>
     <section className="pairing-steps">
-      <p>PAIR A PHONE</p>
+      <p>连接步骤</p>
       <ol>
-        <li><Smartphone size={17}/><span><b>Join the same Tailnet</b><small>Install Tailscale on Windows and Android, then sign into the same account.</small></span></li>
-        <li><Wifi size={17}/><span><b>Run a reachable Hermes gateway</b><small>Use a Tailscale hostname or authenticated HTTPS URL. Keep direct public port exposure off.</small></span></li>
-        <li><LockKeyhole size={17}/><span><b>Authenticate inside Hermes Mobile</b><small>Enter the gateway username and password once. Mobile exchanges them for revocable Hermes tokens and keeps those tokens in Android secure storage; your password is not saved.</small></span></li>
+        <li><Smartphone size={17}/><span><b>网络连通</b><small>手机与主机处于同一 Wi-Fi，或通过 FRP 穿透与 HTTPS 反代提供外部访问。</small></span></li>
+        <li><Wifi size={17}/><span><b>运行 Hermes 服务</b><small>主机端运行 hermes serve，支持 WebSocket 与 REST API 握手。</small></span></li>
+        <li><LockKeyhole size={17}/><span><b>安全握手验证</b><small>输入网关地址及凭证，App 换取受控令牌并安全存入移动端密钥库。</small></span></li>
       </ol>
     </section>
     <section className="pairing-actions">
-      <button className="secondary" onClick={() => void copyChecklist()}>{copied ? <CheckCircle2 size={16}/> : <Copy size={16}/>} {copied ? 'Setup copied' : 'Copy setup checklist'}</button>
-      <a {...external('https://hermes-agent.nousresearch.com/docs/user-guide/multi-connection-desktop')}><ExternalLink size={16}/> Gateway connection guide</a>
+      <button className="secondary" onClick={() => void copyChecklist()}>{copied ? <CheckCircle2 size={16}/> : <Copy size={16}/>} {copied ? '已复制配置清单' : '复制配置清单'}</button>
+      <a {...external('https://hermes-agent.nousresearch.com/docs/user-guide/multi-connection-desktop')}><ExternalLink size={16}/> 网关连接官方文档</a>
     </section>
-    <p className="pairing-disclosure">Hermes Mobile verifies reachability first, exchanges your gateway credentials for revocable Hermes tokens inside the native app, stores tokens in OS-backed secure storage, and marks the host connected only after REST and WebSocket verification.</p>
+    <p className="pairing-disclosure">Hermes 移动端会先检测端点可达性，通过受保护协议换取会话令牌，并在通过 REST 与 WebSocket 双重握手后建立实时双向通信。</p>
   </main>
 }
 
@@ -193,16 +191,16 @@ export function ConnectionSettings({ profiles, sessions, connected, endpoint, th
   if (page === 'pairing') return <PairingSettings back={() => setPage('root')} onPaired={onPaired} onPairingBusy={onPairingBusy} initialEndpoint={endpoint}/>
   const displayEndpoint = endpoint?.replace(/^https?:\/\//, '')
   return <main ref={shellRef} className="app panel connection-screen">
-    <Header title="Connection" subtitle="Hermes Desktop host" back={close}/>
+    <Header title="连接设置" subtitle="Hermes 主控服务" back={close}/>
     <section className={`connection-card ${connected ? 'connected' : 'unpaired'}`}>
-      <span className={`status-pill ${connected ? '' : 'disconnected'}`}>● {connected ? 'Connected' : 'Not connected'}</span>
-      <h3>{connected ? 'Your Hermes host' : endpoint ? 'Saved host needs attention' : 'Pair this device'}</h3>
-      <code>{displayEndpoint || 'No verified Hermes host'}</code>
-      {connected ? <div className="stats"><span><b>{profiles}</b>Bots</span><span><b>{sessions}</b>Sessions</span></div> : <p className="connection-guidance">{endpoint ? 'Your host and secure sign-in are saved. Retry verification below; you do not need to re-enter the address.' : 'Connect to a private, authenticated Hermes gateway before this device can view or control your Bots.'}</p>}
-      <button className={`primary wide connection-sync-button ${syncState}`} disabled={connected && syncState === 'syncing'} aria-busy={connected && syncState === 'syncing'} onClick={connected ? () => void syncNow() : endpoint ? () => void refresh() : () => setPage('pairing')}>{connected ? syncState === 'syncing' ? <><LoaderCircle className="connection-sync-spinner" size={17}/> Syncing…</> : syncState === 'success' ? <><CheckCircle2 size={17}/> Synced</> : 'Sync now' : endpoint ? 'Retry saved connection' : 'Set up security & pairing'}</button>
-      {connected && syncState !== 'idle' && <p className={`connection-sync-result ${syncState}`} role="status">{syncState === 'syncing' ? 'Refreshing live Hermes data…' : syncState === 'success' ? 'Synced with Hermes Desktop just now.' : 'Sync could not complete. Check the host connection and try again.'}</p>}
+      <span className={`status-pill ${connected ? '' : 'disconnected'}`}>● {connected ? '已连接' : '未连接'}</span>
+      <h3>{connected ? '当前 Hermes 主控' : endpoint ? '已保存的端点需要检查' : '配对新设备'}</h3>
+      <code>{displayEndpoint || '暂无已验证的主控地址'}</code>
+      {connected ? <div className="stats"><span><b>{profiles}</b>智能体</span><span><b>{sessions}</b>会话</span></div> : <p className="connection-guidance">{endpoint ? '已保存主控地址与登录凭证。可点击下方重试验证；无需重新输入。' : '在手机查看与调度智能体前，请先连接至可访问且经鉴权的 Hermes 网关。'}</p>}
+      <button className={`primary wide connection-sync-button ${syncState}`} disabled={connected && syncState === 'syncing'} aria-busy={connected && syncState === 'syncing'} onClick={connected ? () => void syncNow() : endpoint ? () => void refresh() : () => setPage('pairing')}>{connected ? syncState === 'syncing' ? <><LoaderCircle className="connection-sync-spinner" size={17}/> 正在同步…</> : syncState === 'success' ? <><CheckCircle2 size={17}/> 同步完成</> : '立即同步' : endpoint ? '重试已保存的连接' : '配置连接与配对'}</button>
+      {connected && syncState !== 'idle' && <p className={`connection-sync-result ${syncState}`} role="status">{syncState === 'syncing' ? '正在刷新实时 Hermes 数据…' : syncState === 'success' ? '刚刚已与 Hermes 主控同步完成。' : '同步未能完成，请检查网关连接后重试。'}</p>}
     </section>
-    <section className="menu-list"><button>Notifications <span>›</span></button><button onClick={() => setShowThemes(value => !value)}>Appearance <span>{themes.find(item => item.id === theme)?.label} ›</span></button>{showThemes && <div className="theme-picker">{themes.map(item => <button className={item.id === theme ? 'selected' : ''} onClick={() => setTheme(item.id)} key={item.id}><span className={`theme-swatch theme-${item.id}`}/><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === theme ? '✓' : ''}</i></button>)}</div>}<button onClick={() => setPage('pairing')}>Security & pairing <span className={connected ? '' : 'connection-attention'}>{connected ? 'Connected ›' : 'Disconnected ›'}</span></button><button onClick={() => setPage('about')}>About Hermes Mobile <span>0.1.1 ›</span></button></section>
-    <p className="fine">The host owns models, credentials, tools, memory, skills, and approvals. This client is the control surface.</p>
+    <section className="menu-list"><button>通知设置 <span>›</span></button><button onClick={() => setShowThemes(value => !value)}>外观主题 <span>{themes.find(item => item.id === theme)?.label} ›</span></button>{showThemes && <div className="theme-picker">{themes.map(item => <button className={item.id === theme ? 'selected' : ''} onClick={() => setTheme(item.id)} key={item.id}><span className={`theme-swatch theme-${item.id}`}/><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === theme ? '✓' : ''}</i></button>)}</div>}<button onClick={() => setPage('pairing')}>安全与配对 <span className={connected ? '' : 'connection-attention'}>{connected ? '已连接 ›' : '未连接 ›'}</span></button><button onClick={() => setPage('about')}>关于 Hermes 移动端 <span>0.1.1 ›</span></button></section>
+    <p className="fine">主控端负责驱动模型、凭证、工具调用、记忆与技能。移动客户端作为远程交互面板。</p>
   </main>
 }

@@ -20,26 +20,25 @@ import { connectAndSubmit, createProfile, interruptSession, loadMessages, loadSn
 type Tab = 'bots' | 'sessions' | 'tasks'
 type DraftBot = { role: string; name: string; description: string; soul: string; model: string; provider: string; shape: string }
 type Theme = 'dark' | 'light' | 'grey' | 'aurora'
-type SettledAssistantResponse = { sessionId: string; profile: string; content: string; usage?: LiveUsage }
 export type ToolActivity = { id: string; name: string; status: 'running' | 'done' | 'failed'; duration_s?: number; summary?: string }
 
 const titleize = (value: string) => value.split(/[-_]+/).filter(Boolean).map(part => part[0].toUpperCase() + part.slice(1)).join(' ')
 const ago = (seconds?: number) => {
   if (!seconds) return ''
   const delta = Math.max(0, Date.now() / 1000 - seconds)
-  if (delta < 75) return 'now'
-  if (delta < 3600) return `${Math.floor(delta / 60)}m`
-  if (delta < 86400) return `${Math.floor(delta / 3600)}h`
-  if (delta < 604800) return `${Math.floor(delta / 86400)}d`
-  return `${Math.floor(delta / 604800)}w`
+  if (delta < 75) return '刚刚'
+  if (delta < 3600) return `${Math.floor(delta / 60)}分钟前`
+  if (delta < 86400) return `${Math.floor(delta / 3600)}小时前`
+  if (delta < 604800) return `${Math.floor(delta / 86400)}天前`
+  return `${Math.floor(delta / 604800)}周前`
 }
 
-const roles: Record<string, [string, string]> = {
-  Researcher: ['research-rabbit', 'Digs into questions and returns sourced answers.'],
-  Coder: ['patch', 'Writes, reviews, and ships code.'],
-  Writer: ['draft', 'Turns ideas into clear, vivid writing.'],
-  Analyst: ['signal', 'Finds patterns and explains what matters.'],
-  Custom: ['', ''],
+const roles: Record<string, [string, string, string]> = {
+  Researcher: ['research-rabbit', '深入钻研问题并提供权威可溯源的结论。', '研究员'],
+  Coder: ['patch', '编写、审查与交付高质量代码。', '程序员'],
+  Writer: ['draft', '将构思提炼为清晰生动、富有表现力的文字。', '文案'],
+  Analyst: ['signal', '洞察规律，挖掘数据核心价值。', '分析师'],
+  Custom: ['', '', '自定义'],
 }
 
 export default function App() {
@@ -80,8 +79,8 @@ export default function App() {
   const [createStep, setCreateStep] = useState(0)
   const [creating, setCreating] = useState(false)
   const [botDraft, setBotDraft] = useState<DraftBot>({
-    role: 'Coder', name: 'patch', description: 'Writes, reviews, and ships code.',
-    soul: 'You are a pragmatic software engineer. Read surrounding code before changing it, keep diffs focused, and verify your work by running it.',
+    role: 'Coder', name: 'patch', description: '编写、审查与交付高质量代码。',
+    soul: '你是一名务实的软件工程师。在修改代码前充分理解上下文，改动精准克制，并通过实际运行验证成果。',
     model: '', provider: '', shape: 'blobatar',
   })
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('hermes-mobile-theme') as Theme | null) || 'dark')
@@ -147,7 +146,7 @@ export default function App() {
       return data
     } catch (reason) {
       if (refreshEpochRef.current.isCurrent(epoch)) {
-        const message = errorMessage(reason, 'Could not connect to Hermes Desktop.')
+        const message = errorMessage(reason, '无法连接至 Hermes 服务。')
         lastConnectionErrorRef.current = message
         setError(message)
         setConnectionStatus('disconnected')
@@ -171,7 +170,7 @@ export default function App() {
     const bootstrap = async () => {
       let nativeEndpoint: string | null = null
       try { nativeEndpoint = await savedHermesEndpoint() }
-      catch (reason) { if (active) setError(errorMessage(reason, 'Could not restore the saved Hermes host.')) }
+      catch (reason) { if (active) setError(errorMessage(reason, '无法恢复保存的 Hermes 服务地址。')) }
       if (!active) return
       const endpoint = activateEndpoint(selectRestoredEndpoint(nativeEndpoint, localStorage.getItem('hermes-mobile-active-endpoint'), 'http://127.0.0.1:9119'))
       await refresh(endpoint, true)
@@ -190,7 +189,7 @@ export default function App() {
         const endpoint = activateEndpoint(saved)
         await refresh(endpoint, true)
       } catch (reason) {
-        const message = errorMessage(reason, 'Could not restore the saved Hermes host.')
+        const message = errorMessage(reason, '无法恢复保存的 Hermes 服务地址。')
         lastConnectionErrorRef.current = message
         setError(message)
         setConnectionStatus('disconnected')
@@ -238,7 +237,7 @@ export default function App() {
         setMessages(latestAssistant >= 0 ? loaded.map((message, index) => index === loaded.length - latestAssistant - 1 ? { ...message, usage: latestUsage } : message) : loaded)
       }
       catch (reason) {
-        if (requestId === sessionLoadRef.current && turnId === chatTurnGenerationRef.current) setError(reason instanceof Error ? reason.message : 'Could not load this Hermes conversation.')
+        if (requestId === sessionLoadRef.current && turnId === chatTurnGenerationRef.current) setError(reason instanceof Error ? reason.message : '无法加载该 Hermes 对话。')
       }
       finally {
         const remaining = Math.max(0, 700 - (performance.now() - startedAt))
@@ -289,7 +288,7 @@ export default function App() {
           const id = String(payload.tool_id || payload.name || `tool-${items.length}`)
           return [...items.filter(item => item.id !== id), { id, name: String(payload.name || 'tool'), status: 'done', duration_s: typeof payload.duration_s === 'number' ? payload.duration_s : undefined, summary: typeof payload.summary === 'string' ? payload.summary : undefined }]
         })
-        if (type === 'error') setError(String(payload.message || 'Hermes could not complete that request.'))
+        if (type === 'error') setError(String(payload.message || 'Hermes 执行请求出错。'))
       })
       if (!isCurrentTurn()) return false
       const terminalAssistant = settleAssistantResponse(turnSession.id, turnSession.profile, finalText, completionUsage)
@@ -303,7 +302,7 @@ export default function App() {
       await refresh()
       return true
     } catch (reason) {
-      if (isCurrentTurn()) setError(reason instanceof Error ? reason.message : 'Could not send to Hermes.')
+      if (isCurrentTurn()) setError(reason instanceof Error ? reason.message : '发送至 Hermes 失败。')
       return false
     } finally {
       if (isCurrentTurn()) {
@@ -317,7 +316,7 @@ export default function App() {
     const turnSession = selectedRef.current
     if (!turnSession || !sendingRef.current) return
     try { await interruptSession(turnSession.id) }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not stop this Hermes turn.') }
+    catch (reason) { setError(reason instanceof Error ? reason.message : '无法中断当前任务。') }
   }, [])
 
   const submitVoice = useCallback((text: string) => submit([], text), [submit])
@@ -348,7 +347,7 @@ export default function App() {
         })
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not create this Bot.')
+      setError(reason instanceof Error ? reason.message : '创建智能体失败。')
     } finally { setCreating(false) }
   }
 
@@ -372,44 +371,33 @@ export default function App() {
   }
 
   if (createOpen) return <CreateWizard step={createStep} setStep={setCreateStep} draft={botDraft} setDraft={setBotDraft} creating={creating} error={error} close={() => { setCreateOpen(false); setCreateStep(0); setError('') }} finish={() => void finishCreate()}/>
-  if (settings) return <ConnectionSettings profiles={profiles.length} sessions={sessions.length} connected={connectionStatus === 'connected'} endpoint={activeEndpoint !== 'http://127.0.0.1:9119' ? activeEndpoint : undefined} theme={theme} setTheme={setTheme} close={() => setSettings(false)} refresh={() => refresh()} onPairingBusy={setPairingBusyState} onPaired={async endpoint => { const normalized = activateEndpoint(endpoint); const data = await refresh(normalized, true); if (!data) throw new Error(lastConnectionErrorRef.current || 'Signed in, but authenticated Hermes REST or live WebSocket verification failed.'); localStorage.setItem('hermes-mobile-active-endpoint', normalized) }}/>
+  if (settings) return <ConnectionSettings profiles={profiles.length} sessions={sessions.length} connected={connectionStatus === 'connected'} endpoint={activeEndpoint !== 'http://127.0.0.1:9119' ? activeEndpoint : undefined} theme={theme} setTheme={setTheme} close={() => setSettings(false)} refresh={() => refresh()} onPairingBusy={setPairingBusyState} onPaired={async endpoint => { const normalized = activateEndpoint(endpoint); const data = await refresh(normalized, true); if (!data) throw new Error(lastConnectionErrorRef.current || '已登录，但 Hermes REST 或 WebSocket 鉴权验证失败。'); localStorage.setItem('hermes-mobile-active-endpoint', normalized) }}/>
   if (selected && profileSheet) return <BotProfileSheet profile={profiles.find(profile => profile.name === selected.profile)} session={selected} onClose={() => setProfileSheet(false)} onUpdated={() => void refresh()}/>
   if (selected) return <ChatView session={selected} conversationLoading={conversationLoading} messages={messages} settledAssistant={settledAssistant?.sessionId === selected.id && settledAssistant.profile === selected.profile ? settledAssistant : null} profiles={profiles} streaming={streaming} sending={sending} toolActivities={toolActivities} error={error} back={() => setSelected(null)} refresh={() => void openSession(selected)} openProfile={() => setProfileSheet(true)} onSessionModelChange={handleSessionModelChange} submit={submit} submitVoice={submitVoice} stop={stop}/>
   if (tab === 'tasks') return <TasksView back={() => setTab('bots')} profiles={profiles}/>
 
   return <main className="app roster-shell">
     <div className="roster-pinned">
-      <header className="roster-head"><div><h1>{tab === 'bots' ? 'Bots' : 'Sessions'}</h1><span className={`connection ${connectionStatus === 'disconnected' ? 'offline' : connectionStatus === 'connected' ? 'online' : 'checking'}`} title={connectionStatus === 'disconnected' ? 'No Hermes detected. Start Hermes Desktop, then retry.' : connectionStatus === 'connected' ? 'Connected to Hermes Desktop' : 'Checking for Hermes Desktop…'} aria-label={connectionStatus === 'disconnected' ? 'Hermes Desktop unavailable' : connectionStatus === 'connected' ? 'Connected to Hermes Desktop' : 'Checking for Hermes Desktop'}><i className="connection-dot"/><span>{connectionStatus === 'disconnected' ? 'Hermes unavailable' : connectionStatus === 'connected' ? 'Hermes Desktop' : 'Checking…'}</span></span></div><div className="header-actions"><button className="icon-button" aria-label="Search" onClick={() => setSearching(value => !value)}><Search size={18}/></button><button className="icon-button" aria-label="Settings" onClick={() => setSettings(true)}><SettingsIcon size={18}/></button></div></header>
-      {searching && <div className="search"><Search size={16}/><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder={tab === 'bots' ? 'Search bots and group chats…' : 'Search sessions…'}/><button onClick={() => { setQuery(''); setSearching(false) }}><X size={16}/></button></div>}
-      <nav className="tabs"><button className={tab === 'bots' ? 'active' : ''} onClick={() => setTab('bots')}>Bots</button><button className={tab === 'sessions' ? 'active' : ''} onClick={() => setTab('sessions')}>Sessions</button><button onClick={() => setTab('tasks')}>Tasks</button></nav>
+      <header className="roster-head"><div><h1>{tab === 'bots' ? '智能体' : '会话'}</h1><span className={`connection ${connectionStatus === 'disconnected' ? 'offline' : connectionStatus === 'connected' ? 'online' : 'checking'}`} title={connectionStatus === 'disconnected' ? '未检测到 Hermes 服务，请检查本地或穿透服务后重试' : connectionStatus === 'connected' ? '已连接 Hermes 服务' : '正在检测 Hermes 服务…'} aria-label={connectionStatus === 'disconnected' ? 'Hermes 未就绪' : connectionStatus === 'connected' ? 'Hermes 在线' : '检测中…'}><i className="connection-dot"/><span>{connectionStatus === 'disconnected' ? 'Hermes 未就绪' : connectionStatus === 'connected' ? 'Hermes 在线' : '检测中…'}</span></span></div><div className="header-actions"><button className="icon-button" aria-label="搜索" onClick={() => setSearching(value => !value)}><Search size={18}/></button><button className="icon-button" aria-label="设置" onClick={() => setSettings(true)}><SettingsIcon size={18}/></button></div></header>
+      {searching && <div className="search"><Search size={16}/><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder={tab === 'bots' ? '搜索智能体或群聊…' : '搜索会话…'}/><button onClick={() => { setQuery(''); setSearching(false) }}><X size={16}/></button></div>}
+      <nav className="tabs"><button className={tab === 'bots' ? 'active' : ''} onClick={() => setTab('bots')}>智能体</button><button className={tab === 'sessions' ? 'active' : ''} onClick={() => setTab('sessions')}>历史会话</button><button onClick={() => setTab('tasks')}>定时任务</button></nav>
     </div>
     <div className="roster-list-scroll" ref={rosterScrollRef} onTouchStart={rosterTouchStart} onTouchMove={rosterTouchMove} onTouchEnd={rosterTouchEnd}>
-      {rosterPullActive && <div className="roster-pull-cue" style={{ height: `${rosterPullRefreshing ? 46 : rosterPullDistance}px` }}><RefreshCw size={15} className={rosterPullRefreshing ? 'pull-refresh-spinner' : ''}/><span>{rosterPullRefreshing ? 'Refreshing…' : rosterPullDistance >= 56 ? 'Release to refresh' : 'Pull to refresh'}</span></div>}
+      {rosterPullActive && <div className="roster-pull-cue" style={{ height: `${rosterPullRefreshing ? 46 : rosterPullDistance}px` }}><RefreshCw size={15} className={rosterPullRefreshing ? 'pull-refresh-spinner' : ''}/><span>{rosterPullRefreshing ? '正在刷新…' : rosterPullDistance >= 56 ? '松开立即刷新' : '下拉刷新'}</span></div>}
       {error && <Notice message={error} retry={() => void refresh()}/>}
-      {loading && !profiles.length ? <Skeleton/> : tab === 'bots' ? <section className="bot-list">{rows.map(({ profile, session }, index) => <button className="bot-row enter" style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }} key={profile.name} disabled={!session} onClick={() => session && void openSession(session)}><BotAvatar profile={profile} fallbackName={profile.name}/><span className="bot-copy"><b>{profile.display_name || titleize(profile.name)}</b><small>{session?.preview || profile.description || 'No messages yet'} </small></span><span className="meta">{ago(session?.last_active)}{session && <i className={session.unread ? 'unread' : ''}/>}</span></button>)}</section> : <section className="bot-list">{visibleSessions.map((session, index) => <button className="bot-row enter" style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }} key={`${session.profile}:${session.id}`} onClick={() => void openSession(session)}><BotAvatar profile={profiles.find(profile => profile.name === session.profile)} fallbackName={session.profile} variant="session"/><span className="bot-copy"><b>{session.title || 'Untitled session'}</b><small>{titleize(session.profile)} · {session.preview}</small></span><span className="meta">{ago(session.last_active)}</span></button>)}</section>}
+      {loading && !profiles.length ? <Skeleton/> : tab === 'bots' ? <section className="bot-list">{rows.map(({ profile, session }, index) => <button className="bot-row enter" style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }} key={profile.name} disabled={!session} onClick={() => session && void openSession(session)}><BotAvatar profile={profile} fallbackName={profile.name}/><span className="bot-copy"><b>{profile.display_name || titleize(profile.name)}</b><small>{session?.preview || profile.description || '暂无消息'} </small></span><span className="meta">{ago(session?.last_active)}{session && <i className={session.unread ? 'unread' : ''}/>}</span></button>)}</section> : <section className="bot-list">{visibleSessions.map((session, index) => <button className="bot-row enter" style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }} key={`${session.profile}:${session.id}`} onClick={() => void openSession(session)}><BotAvatar profile={profiles.find(profile => profile.name === session.profile)} fallbackName={session.profile} variant="session"/><span className="bot-copy"><b>{session.title || '未命名会话'}</b><small>{titleize(session.profile)} · {session.preview}</small></span><span className="meta">{ago(session.last_active)}</span></button>)}</section>}
     </div>
-    <footer className="roster-actions">{tab === 'bots' ? <><button className="secondary" disabled title="Group-room transport is not yet enabled"><Users size={16}/> New group</button><button className="primary" onClick={() => setCreateOpen(true)}><Plus size={16}/> New Bot</button></> : <button className="primary wide" onClick={() => setTab('bots')}>Back to Bots</button>}</footer>
+    <footer className="roster-actions">{tab === 'bots' ? <><button className="secondary" disabled title="群聊传输功能即将推出"><Users size={16}/> 新建群聊</button><button className="primary" onClick={() => setCreateOpen(true)}><Plus size={16}/> 新建智能体</button></> : <button className="primary wide" onClick={() => setTab('bots')}>返回智能体列表</button>}</footer>
   </main>
 }
 
 function Notice({ message, retry }: { message: string; retry: () => void }) {
-  return <div className="notice"><b>Connection needs attention</b><span>{message}</span><button onClick={retry}>Try again</button></div>
+  return <div className="notice"><b>连接异常需要注意</b><span>{message}</span><button onClick={retry}>重试</button></div>
 }
 function Skeleton() { return <div className="skeletons">{[1, 2, 3, 4, 5, 6].map(item => <i key={item}/>)}</div> }
 
-function LegacyConnectionSettings({ profiles, sessions, theme, setTheme, close, refresh }: { profiles: number; sessions: number; theme: Theme; setTheme: (theme: Theme) => void; close: () => void; refresh: () => void }) {
-  const [showThemes, setShowThemes] = useState(false)
-  const themes: Array<{ id: Theme; label: string; description: string }> = [
-    { id: 'dark', label: 'OLED dark', description: 'Deep black with violet accents' },
-    { id: 'light', label: 'Light', description: 'Bright canvas with soft blue accents' },
-    { id: 'grey', label: 'Graphite', description: 'Neutral grey with cool surfaces' },
-    { id: 'aurora', label: 'Aurora', description: 'Midnight navy with teal-violet glow' },
-  ]
-  return <main className="app panel"><header className="panel-head"><button className="back-button" onClick={close}>‹</button><div><h2>Connection</h2><p>Hermes Desktop host</p></div></header><section className="connection-card"><span className="status-pill">● Connected</span><h3>This Windows PC</h3><code>127.0.0.1:9119</code><div className="stats"><span><b>{profiles}</b>Bots</span><span><b>{sessions}</b>Sessions</span></div><button className="primary wide" onClick={refresh}>Sync now</button></section><section className="menu-list"><button>Notifications <span>›</span></button><button onClick={() => setShowThemes(value => !value)}>Appearance <span>{themes.find(item => item.id === theme)?.label} ›</span></button>{showThemes && <div className="theme-picker">{themes.map(item => <button className={item.id === theme ? 'selected' : ''} onClick={() => setTheme(item.id)} key={item.id}><span className={`theme-swatch theme-${item.id}`}/><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === theme ? '✓' : ''}</i></button>)}</div>}<button>Security & pairing <span>›</span></button><button>About Hermes Mobile <span>0.1.0 ›</span></button></section><p className="fine">The host owns models, credentials, tools, memory, skills, and approvals. This client is the control surface.</p></main>
-}
-
 function CreateWizard({ step, setStep, draft, setDraft, creating, error, close, finish }: { step: number; setStep: (step: number) => void; draft: DraftBot; setDraft: React.Dispatch<React.SetStateAction<DraftBot>>; creating: boolean; error: string; close: () => void; finish: () => void }) {
-  const titles = ['Who is this bot?', 'Personality', 'Model', 'Look']
+  const titles = ['智能体定位', '个性设定', '模型选择', '头像外观']
   useEffect(() => {
     const onMobileBack = (event: Event) => {
       event.preventDefault()
@@ -419,8 +407,11 @@ function CreateWizard({ step, setStep, draft, setDraft, creating, error, close, 
     window.addEventListener('hermes-mobile-back', onMobileBack)
     return () => window.removeEventListener('hermes-mobile-back', onMobileBack)
   }, [close, setStep, step])
-  const pickRole = (role: string) => { const [name, description] = roles[role]; setDraft(current => ({ ...current, role, name, description })) }
-  return <main className="app wizard"><header><button className="icon-button" onClick={close}><X size={18}/></button><div className="progress">{[0, 1, 2, 3].map(item => <i className={item === step ? 'current' : ''} key={item}/>)}</div></header><section><h1>{titles[step]}</h1>{step === 0 && <><p>Name it and give it a job.</p><div className="chips">{Object.keys(roles).map(role => <button className={draft.role === role ? 'selected' : ''} onClick={() => pickRole(role)} key={role}>{role}</button>)}</div><Field label="NAME"><input value={draft.name} onChange={event => setDraft(current => ({ ...current, name: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}/><small>Lowercase profile handle, for example research-rabbit.</small></Field><Field label="WHAT SHOULD IT DO?"><input value={draft.description} onChange={event => setDraft(current => ({ ...current, description: event.target.value }))}/></Field></>}{step === 1 && <><p>Optional — shape how it thinks and talks.</p><div className="explain">This becomes the Bot’s real SOUL.md and loads into every conversation.</div><Field label="SOUL"><textarea value={draft.soul} onChange={event => setDraft(current => ({ ...current, soul: event.target.value }))}/></Field></>}{step === 2 && <><p>Optional — pin a model, or use the Hermes default.</p><button className={!draft.model ? 'model-option selected' : 'model-option'} onClick={() => setDraft(current => ({ ...current, model: '', provider: '' }))}><b>Use Hermes default</b><small>Inherits this PC’s provider and model.</small></button><button className={draft.model === 'gpt-5.6-sol' ? 'model-option selected' : 'model-option'} onClick={() => setDraft(current => ({ ...current, model: 'gpt-5.6-sol', provider: 'openai-api' }))}>openai-api/gpt-5.6-sol</button></>}{step === 3 && <><p>Choose an avatar that remains identical in Hermes Desktop and Mobile.</p><BotAppearancePicker name={draft.name} shape={draft.shape} onShape={shape => setDraft(current => ({ ...current, shape }))}/></>}{error && <p className="wizard-error">{error}</p>}</section><footer><button className="secondary" onClick={() => step ? setStep(step - 1) : close()}>{step ? 'Back' : 'Cancel'}</button><button className="primary" disabled={creating || (step === 0 && !draft.name)} onClick={() => step < 3 ? setStep(step + 1) : finish()}>{creating ? 'Creating…' : step < 3 ? 'Continue' : 'Create Bot'}</button></footer></main>
+  const pickRole = (roleKey: string) => {
+    const [name, description] = roles[roleKey]
+    setDraft(current => ({ ...current, role: roleKey, name, description }))
+  }
+  return <main className="app wizard"><header><button className="icon-button" onClick={close}><X size={18}/></button><div className="progress">{[0, 1, 2, 3].map(item => <i className={item === step ? 'current' : ''} key={item}/>)}</div></header><section><h1>{titles[step]}</h1>{step === 0 && <><p>为它命名并赋予职责。</p><div className="chips">{Object.entries(roles).map(([roleKey, [, , label]]) => <button className={draft.role === roleKey ? 'selected' : ''} onClick={() => pickRole(roleKey)} key={roleKey}>{label}</button>)}</div><Field label="智能体标识 (NAME)"><input value={draft.name} onChange={event => setDraft(current => ({ ...current, name: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}/><small>小写英文句柄，例如 research-rabbit。</small></Field><Field label="职责描述 (WHAT SHOULD IT DO?)"><input value={draft.description} onChange={event => setDraft(current => ({ ...current, description: event.target.value }))}/></Field></>}{step === 1 && <><p>可选 — 塑造它的思考方式与表达风格。</p><div className="explain">这会写入智能体的 SOUL.md，并在每次会话中生效。</div><Field label="人设设定 (SOUL)"><textarea value={draft.soul} onChange={event => setDraft(current => ({ ...current, soul: event.target.value }))}/></Field></>}{step === 2 && <><p>可选 — 指定专属模型，或使用 Hermes 默认。</p><button className={!draft.model ? 'model-option selected' : 'model-option'} onClick={() => setDraft(current => ({ ...current, model: '', provider: '' }))}><b>使用 Hermes 默认模型</b><small>继承主控服务的服务商与模型配置。</small></button><button className={draft.model === 'gpt-5.6-sol' ? 'model-option selected' : 'model-option'} onClick={() => setDraft(current => ({ ...current, model: 'gpt-5.6-sol', provider: 'openai-api' }))}>openai-api/gpt-5.6-sol</button></>}{step === 3 && <><p>选择在桌面端与移动端保持统一的外观头像。</p><BotAppearancePicker name={draft.name} shape={draft.shape} onShape={shape => setDraft(current => ({ ...current, shape }))}/></>}{error && <p className="wizard-error">{error}</p>}</section><footer><button className="secondary" onClick={() => step ? setStep(step - 1) : close()}>{step ? '上一步' : '取消'}</button><button className="primary" disabled={creating || (step === 0 && !draft.name)} onClick={() => step < 3 ? setStep(step + 1) : finish()}>{creating ? '创建中…' : step < 3 ? '下一步' : '创建智能体'}</button></footer></main>
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

@@ -1,0 +1,114 @@
+name: Build Android Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Setup Android NDK
+        run: |
+          echo "Checking existing NDK in $ANDROID_HOME/ndk..."
+          if [ ! -d "$ANDROID_HOME/ndk" ] || [ -z "$(ls -A "$ANDROID_HOME/ndk" 2>/dev/null)" ]; then
+            echo "Installing NDK 26.3.11579264..."
+            echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
+          fi
+          NDK_VER=$(ls -1 "$ANDROID_HOME/ndk" | sort -V | tail -n 1)
+          echo "Detected NDK: $NDK_VER"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VER" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests and frontend build
+        run: |
+          pnpm test
+          pnpm build
+
+      - name: Generate Release Keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$GITHUB_WORKSPACE/hermes-mobile.jks" \
+            -alias hermes-mobile \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass hermes123456 \
+            -keypass hermes123456 \
+            -dname "CN=YouYang, OU=Hermes, O=YouYangAi, L=Taicang, ST=Jiangsu, C=CN"
+          echo "HERMES_MOBILE_KEYSTORE=$GITHUB_WORKSPACE/hermes-mobile.jks" >> $GITHUB_ENV
+          echo "HERMES_MOBILE_STORE_PASSWORD=hermes123456" >> $GITHUB_ENV
+          echo "HERMES_MOBILE_KEY_ALIAS=hermes-mobile" >> $GITHUB_ENV
+          echo "HERMES_MOBILE_KEY_PASSWORD=hermes123456" >> $GITHUB_ENV
+
+      - name: Build Android ARM64 Release APK
+        run: |
+          pnpm tauri android build --apk --target aarch64 --split-per-abi
+
+      - name: Locate and Rename APK
+        run: |
+          mkdir -p release-artifacts
+          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "Error: APK not found!"
+            find src-tauri/gen/android/app/build/outputs -type f
+            exit 1
+          fi
+          echo "Found APK at $APK_PATH"
+          cp "$APK_PATH" release-artifacts/Hermes-Mobile-Android-arm64-zh-release.apk
+          ls -lh release-artifacts/
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hermes-Mobile-Android-arm64-zh-release
+          path: release-artifacts/Hermes-Mobile-Android-arm64-zh-release.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main')
+        with:
+          tag_name: v0.1.1-zh
+          name: Hermes 移动端 (中文汉化与专属图标版) v0.1.1
+          body: |
+            ### Hermes 移动端 (Hermes Mobile) 中文汉化与定制版
+
+            - **专属图标**：赛博机能神使灵羊（曜石黑切面 + 额前发光 AI 核心 + 展开神羽）
+            - **全量汉化**：智能体控制台、实时对话、工具调用、SOUL 设定、能力管理、定时任务、连接配置 100% 地道中文
+            - **架构**：React 19 + Tauri v2 + Android ARM64
+            - **开箱即用**：适用于所有现代 Android 手机 (arm64-v8a)
+          files: release-artifacts/Hermes-Mobile-Android-arm64-zh-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

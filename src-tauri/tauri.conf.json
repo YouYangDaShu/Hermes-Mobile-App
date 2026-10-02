@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Hermes Mobile",
+  "productName": "Hermes",
   "version": "0.1.1",
   "identifier": "com.hermesagent.mobile",
   "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://localhost:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
-  "app": { "windows": [{ "title": "Hermes Mobile", "width": 420, "height": 860, "resizable": true }], "security": { "csp": null } },
+  "app": { "windows": [{ "title": "Hermes", "width": 420, "height": 860, "resizable": true }], "security": { "csp": null } },
   "bundle": { "active": true, "targets": "all", "icon": ["icons/icon.ico", "icons/icon.png"] }
 }

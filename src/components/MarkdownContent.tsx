@@ -17,7 +17,7 @@ function CodeBlock({ className, children }: { className?: string; children: Reac
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1600)
   }
-  return <div className="code-block"><div className="code-head"><span>{language}</span><button onClick={() => void copy()} aria-label="Copy code">{copied ? <><Check size={13}/> Copied</> : <><Copy size={13}/> Copy</>}</button></div><pre><code className={className}>{children}</code></pre></div>
+  return <div className="code-block"><div className="code-head"><span>{language}</span><button onClick={() => void copy()} aria-label="复制代码">{copied ? <><Check size={13}/> 已复制</> : <><Copy size={13}/> 复制</>}</button></div><pre><code className={className}>{children}</code></pre></div>
 }
 
 export function MarkdownContent({ children }: { children: string }) {
@@ -63,17 +63,17 @@ export function MessageCard({ message, onEdit, profile, fallbackName, revealTime
   }
 
   if (message.role === 'system') return null
-  if (message.role === 'tool') return <div className="tool-card"><span className="tool-icon"><Wrench size={14}/></span><span><b>{message.tool_name || 'Tool activity'}</b><small>Completed</small></span><Check size={15} className="tool-check"/></div>
-  if (message.role === 'user') return <article className="message-row user-row"><div className="user-bubble"><MarkdownContent>{message.content}</MarkdownContent></div><div className="message-actions"><button onClick={() => void copy()}>{copied ? <Check size={13}/> : <Copy size={13}/>}<span>{copied ? 'Copied' : 'Copy'}</span></button><button onClick={() => onEdit(message.content)}>Edit</button></div></article>
+  if (message.role === 'tool') return <div className="tool-card"><span className="tool-icon"><Wrench size={14}/></span><span><b>{message.tool_name || '工具调用'}</b><small>已完成</small></span><Check size={15} className="tool-check"/></div>
+  if (message.role === 'user') return <article className="message-row user-row"><div className="user-bubble"><MarkdownContent>{message.content}</MarkdownContent></div><div className="message-actions"><button onClick={() => void copy()}>{copied ? <Check size={13}/> : <Copy size={13}/>}<span>{copied ? '已复制' : '复制'}</span></button><button onClick={() => onEdit(message.content)}>编辑</button></div></article>
 
   return <article className={`message-row assistant-row ${revealTimestamp ? 'timestamp-visible' : ''}`} onPointerDown={event => setSwipeStartX(event.clientX)} onPointerUp={event => finishSwipe(event.clientX)} onPointerCancel={() => setSwipeStartX(null)}>
     <div className="assistant-message-layout">
       <BotAvatar profile={profile} fallbackName={fallbackName} variant="message"/>
       <div className="assistant-message-content">
-        {message.reasoning && <details className="thinking-card"><summary><span className="thinking-title"><Lightbulb size={14}/><b>Thinking</b><em>{reasoningSummary}</em></span><span className="disclosure">⌄</span></summary><div className="thinking-copy"><MarkdownContent>{message.reasoning}</MarkdownContent></div></details>}
+        {message.reasoning && <details className="thinking-card"><summary><span className="thinking-title"><Lightbulb size={14}/><b>思考过程</b><em>{reasoningSummary}</em></span><span className="disclosure">⌄</span></summary><div className="thinking-copy"><MarkdownContent>{message.reasoning}</MarkdownContent></div></details>}
         <MarkdownContent>{message.content}</MarkdownContent>
-        {stats && <div className="response-stats" aria-label="Response generation statistics">{stats}</div>}
-        <div className="message-actions"><button onClick={() => void copy()}>{copied ? <Check size={13}/> : <Copy size={13}/>}<span>{copied ? 'Copied' : 'Copy'}</span></button></div>
+        {stats && <div className="response-stats" aria-label="响应指标统计">{stats}</div>}
+        <div className="message-actions"><button onClick={() => void copy()}>{copied ? <Check size={13}/> : <Copy size={13}/>}<span>{copied ? '已复制' : '复制'}</span></button></div>
       </div>
     </div>
     {timestamp && <time className="message-time">{timestamp}</time>}

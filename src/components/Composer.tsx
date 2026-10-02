@@ -34,13 +34,22 @@ export type ComposerProps = {
 }
 
 const reasoningChoices = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra']
-const labelReasoning = (value: string) => value === 'none' ? 'Off' : value === 'xhigh' ? 'XHigh' : value[0].toUpperCase() + value.slice(1)
-const titleize = (value: string) => value.split(/[-_]+/).filter(Boolean).map(part => part[0].toUpperCase() + part.slice(1)).join(' ')
+const reasoningLabels: Record<string, string> = {
+  none: '关闭',
+  minimal: '极低',
+  low: '低',
+  medium: '中等',
+  high: '高',
+  xhigh: '极高',
+  max: '最大',
+  ultra: '终极'
+}
+const labelReasoning = (value: string) => reasoningLabels[value] || value[0].toUpperCase() + value.slice(1)
 
 const toDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
   const reader = new FileReader()
   reader.onload = () => resolve(String(reader.result || ''))
-  reader.onerror = () => reject(new Error(`Could not read ${file.name}.`))
+  reader.onerror = () => reject(new Error(`无法读取文件 ${file.name}。`))
   reader.readAsDataURL(file)
 })
 
@@ -178,7 +187,7 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
       setVoiceState('idle')
       setVoiceInterim('')
       setRecordSeconds(0)
-      if (!cleanupError && error.code !== 'CANCELLED') onControlError(error.code === 'NO_SPEECH' ? 'No speech was detected. Try again when you are ready.' : error.message || 'Voice input could not start.')
+      if (!cleanupError && error.code !== 'CANCELLED') onControlError(error.code === 'NO_SPEECH' ? '未检测到语音输入，请准备好后重试。' : error.message || '语音输入无法启动。')
     }))
     return () => { active = false; unlistens.forEach(unlisten => unlisten()); void stopSttListening().catch(() => {}) }
   }, [onControlError])
@@ -202,17 +211,17 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
     try {
       const permission = await requestSttPermission()
       if (request !== voiceStartRequestRef.current) return
-      if (permission.microphone !== 'granted') throw new Error('Microphone permission is required. Allow Hermes Mobile to use your microphone, then try again.')
-      if (permission.speechRecognition && permission.speechRecognition !== 'granted') throw new Error('Speech recognition permission is required. Allow Hermes Mobile to recognize speech, then try again.')
+      if (permission.microphone !== 'granted') throw new Error('需要麦克风权限。请在系统设置中允许 Hermes 移动端使用麦克风后重试。')
+      if (permission.speechRecognition && permission.speechRecognition !== 'granted') throw new Error('需要语音识别权限。请允许权限后重试。')
       const availability = await sttIsAvailable()
       if (request !== voiceStartRequestRef.current) return
-      if (!availability.available) throw new Error(availability.reason || 'Speech recognition is not available on this device.')
+      if (!availability.available) throw new Error(availability.reason || '当前设备不支持语音识别功能。')
       voiceDiscardRef.current = false
       voiceAutoSendRef.current = autoSend
       setVoiceAutoSend(autoSend)
       voiceStartedAtRef.current = performance.now()
       setRecordSeconds(0)
-      await startSttListening({ language: navigator.language || 'en-US', interimResults: true, continuous: false, maxDuration: 45_000 })
+      await startSttListening({ language: navigator.language || 'zh-CN', interimResults: true, continuous: false, maxDuration: 45_000 })
       if (request !== voiceStartRequestRef.current) { voiceCleanupExpectedRef.current = true; await stopSttListening(); return }
       voiceStartInFlightRef.current = false
     } catch (reason) {
@@ -222,7 +231,7 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
       setVoiceAutoSend(false)
       setVoiceState('idle')
       setRecordSeconds(0)
-      onControlError(reason instanceof Error ? reason.message : 'Voice input could not start. Try again.')
+      onControlError(reason instanceof Error ? reason.message : '无法启动语音输入，请重试。')
     }
   }
   const finishVoice = async (discard = false) => {
@@ -247,7 +256,7 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
       setVoiceAutoSend(false)
       setVoiceState('idle')
       setRecordSeconds(0)
-      if (!discard) onControlError(reason instanceof Error ? reason.message : 'Voice input could not stop.')
+      if (!discard) onControlError(reason instanceof Error ? reason.message : '无法停止语音录音。')
     }
   }
   const onMicPointerDown = () => {
@@ -282,12 +291,12 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
   }
   const uploadAttachment = async (file: File, id: string) => {
     try {
-      if (file.size > maxAttachmentBytes) throw new Error(`Files must be 50 MB or smaller (${file.name} is ${formatFileSize(file.size)}).`)
+      if (file.size > maxAttachmentBytes) throw new Error(`上传文件大小不能超过 50 MB（${file.name} 为 ${formatFileSize(file.size)}）。`)
       const dataUrl = await toDataUrl(file)
       const uploaded = await attachFile(session.id, session.profile, { name: file.name, dataUrl })
       setAttachments(items => items.map(item => item.id === id ? { ...item, name: uploaded.name, status: 'ready', refText: uploaded.refText, error: undefined } : item))
     } catch (reason) {
-      setAttachments(items => items.map(item => item.id === id ? { ...item, status: 'error', error: reason instanceof Error ? reason.message : 'Hermes could not upload this file.' } : item))
+      setAttachments(items => items.map(item => item.id === id ? { ...item, status: 'error', error: reason instanceof Error ? reason.message : '无法上传该文件至 Hermes。' } : item))
     }
   }
   const addFiles = (files: File[]) => {
@@ -305,7 +314,7 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
   }
   const submitWithAttachments = async () => {
     const uploading = attachments.some(item => item.status === 'uploading')
-    if (uploading) { onControlError('Wait for the file upload to finish, then send it to Hermes.'); return }
+    if (uploading) { onControlError('请等待文件上传完成，再发送至 Hermes。'); return }
     const ready = attachments.filter((item): item is PendingAttachment & { refText: string } => item.status === 'ready' && Boolean(item.refText))
     const text = draft
     if (!text.trim() && !ready.length) return
@@ -321,7 +330,7 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
       setModel(nextModel)
       onSessionModelChange(nextModel)
       setModelMenu(false)
-    } catch (reason) { onControlError(reason instanceof Error ? reason.message : 'Could not change this chat model.') }
+    } catch (reason) { onControlError(reason instanceof Error ? reason.message : '无法切换当前会话模型。') }
   }
 
   const chooseReasoning = async (effort: string) => {
@@ -330,35 +339,35 @@ export const Composer = memo(function Composer({ session, profiles, sending, dra
       await setSessionReasoning(session.id, session.profile, effort)
       setReasoning(effort)
       setReasoningMenu(false)
-    } catch (reason) { onControlError(reason instanceof Error ? reason.message : 'Could not change reasoning effort.') }
+    } catch (reason) { onControlError(reason instanceof Error ? reason.message : '无法切换思考强度。') }
   }
 
   return <>
-    {slashOpen && (slashItems.length || slashLoading) && <section className="slash-popover" aria-label="Hermes skills and commands" role="listbox"><div className="slash-popover-head"><Sparkles size={14}/><span>{slashLoading ? 'Loading Hermes skills…' : 'Hermes skills & commands'}</span></div>{slashItems.slice(0, 12).map((item, index) => <button className={`${index === slashIndex ? 'selected' : ''} ${item.kind === 'skill' ? 'skill' : 'command'}`} key={`${item.text}:${index}`} type="button" role="option" aria-selected={index === slashIndex} onMouseDown={event => event.preventDefault()} onClick={() => chooseSlash(item)}><span className="slash-item-icon">{item.kind === 'skill' ? <Sparkles size={14}/> : '/'}</span><span><b>{item.display || item.text}</b><small>{item.meta || (item.kind === 'skill' ? 'Installed Hermes skill' : 'Hermes command')}</small></span></button>)}</section>}
-    {mentionOpen && <div className="mention-popover">{mentions.map(item => <button key={item.name} onClick={() => setDraft(draft.replace(/@[\w-]*$/, `@${item.name} `))}><BotAvatar profile={item} fallbackName={item.name} variant="mention"/><span><b>{item.display_name || titleize(item.name)}</b><small>@{item.name}</small></span></button>)}</div>}
+    {slashOpen && (slashItems.length || slashLoading) && <section className="slash-popover" aria-label="Hermes 技能与指令" role="listbox"><div className="slash-popover-head"><Sparkles size={14}/><span>{slashLoading ? '正在加载 Hermes 技能…' : 'Hermes 技能与指令'}</span></div>{slashItems.slice(0, 12).map((item, index) => <button className={`${index === slashIndex ? 'selected' : ''} ${item.kind === 'skill' ? 'skill' : 'command'}`} key={`${item.text}:${index}`} type="button" role="option" aria-selected={index === slashIndex} onMouseDown={event => event.preventDefault()} onClick={() => chooseSlash(item)}><span className="slash-item-icon">{item.kind === 'skill' ? <Sparkles size={14}/> : '/'}</span><span><b>{item.display || item.text}</b><small>{item.meta || (item.kind === 'skill' ? '已安装的 Hermes 技能' : 'Hermes 系统指令')}</small></span></button>)}</section>}
+    {mentionOpen && <div className="mention-popover">{mentions.map(item => <button key={item.name} onClick={() => setDraft(draft.replace(/@[\w-]*$/, `@${item.name} `))}><BotAvatar profile={item} fallbackName={item.name} variant="mention"/><span><b>{item.display_name || item.name}</b><small>@{item.name}</small></span></button>)}</div>}
 
-    {(modelMenu || reasoningMenu) && <button className="popover-scrim" aria-label="Close menu" onClick={() => { setModelMenu(false); setReasoningMenu(false) }}/>}
+    {(modelMenu || reasoningMenu) && <button className="popover-scrim" aria-label="关闭菜单" onClick={() => { setModelMenu(false); setReasoningMenu(false) }}/>}
     {modelMenu && <section className="model-popover">
-      <div className="model-search"><Search size={14}/><input value={modelSearch} onChange={event => setModelSearch(event.target.value)} placeholder="Search models"/></div>
-      <small className="popover-label">Available models</small>
-      <div className="model-list">{filteredModels.length ? filteredModels.map(item => <button className={item.name === model && item.provider === provider ? 'selected' : ''} disabled={!item.authenticated} key={`${item.provider}:${item.name}`} onClick={() => void chooseModel(item.provider, item.name)}><span><b>{item.name}</b><small>{item.providerName}</small></span>{item.name === model && item.provider === provider && <span>✓</span>}</button>) : <p>No configured models match.</p>}</div>
+      <div className="model-search"><Search size={14}/><input value={modelSearch} onChange={event => setModelSearch(event.target.value)} placeholder="搜索模型"/></div>
+      <small className="popover-label">可用模型</small>
+      <div className="model-list">{filteredModels.length ? filteredModels.map(item => <button className={item.name === model && item.provider === provider ? 'selected' : ''} disabled={!item.authenticated} key={`${item.provider}:${item.name}`} onClick={() => void chooseModel(item.provider, item.name)}><span><b>{item.name}</b><small>{item.providerName}</small></span>{item.name === model && item.provider === provider && <span>✓</span>}</button>) : <p>未找到匹配的模型。</p>}</div>
     </section>}
-    {reasoningMenu && <section className="reasoning-popover"><small className="popover-label">Reasoning effort</small>{reasoningChoices.map(item => <button className={item === reasoning ? 'selected' : ''} key={item} onClick={() => void chooseReasoning(item)}><span>{labelReasoning(item)}</span>{item === reasoning && <span>✓</span>}</button>)}</section>}
+    {reasoningMenu && <section className="reasoning-popover"><small className="popover-label">思考强度 (Reasoning)</small>{reasoningChoices.map(item => <button className={item === reasoning ? 'selected' : ''} key={item} onClick={() => void chooseReasoning(item)}><span>{labelReasoning(item)}</span>{item === reasoning && <span>✓</span>}</button>)}</section>}
 
     <footer className="chat-dock">
-      {voiceState !== 'idle' ? <div className={`recording-composer ${voiceAutoSend ? 'voice-autosend' : ''}`}><button onClick={() => void finishVoice(true)} aria-label="Cancel voice input"><X size={18}/></button>{voiceAutoSend && <small className="voice-autosend-label">Auto-send</small>}<span><i/>0:{String(recordSeconds).padStart(2, '0')}</span><div className="voice-bars">{voiceState === 'processing' ? 'Transcribing your voice…' : voiceInterim || (voiceAutoSend ? 'Release to send' : 'Listening…')}</div><button className="composer-send" onClick={() => void finishVoice()} aria-label="Finish voice input"><ArrowUp size={16}/></button></div> : <div className={`ai-composer ${draggingFiles ? 'file-drop-active' : ''}`}>
-        {draggingFiles && <div className="file-drop-hint"><Paperclip size={15}/><span>Drop files to send to Hermes</span></div>}
-        {!!attachments.length && <div className="attachment-list" aria-label="Attached files">{attachments.map(item => <div className={`attachment-chip ${item.status}`} key={item.id}><FileText size={15}/><span><b>{item.name}</b><small>{item.error || (item.status === 'uploading' ? 'Uploading to Hermes…' : formatFileSize(item.size))}</small></span>{item.status === 'uploading' ? <LoaderCircle className="attachment-spinner" size={14}/> : item.status === 'ready' ? <Check size={14}/> : <span className="attachment-failed">!</span>}<button type="button" onClick={() => setAttachments(items => items.filter(current => current.id !== item.id))} aria-label={`Remove ${item.name}`}><Trash2 size={13}/></button></div>)}</div>}
-        {voiceReview && <div className="voice-review" aria-label="Voice transcription ready to edit"><Mic size={15}/><span><b>Voice transcription</b><small>Edit before sending</small></span><button type="button" onClick={() => { setVoiceReview(''); setDraft('') }} aria-label="Discard voice transcription"><X size={14}/></button></div>}
-        <textarea ref={textareaRef} value={draft} disabled={sending || voiceState !== 'idle'} rows={1} placeholder="Ask anything…  /commands" onChange={event => setDraft(event.target.value)} onKeyDown={handleComposerKeyDown}/>
+      {voiceState !== 'idle' ? <div className={`recording-composer ${voiceAutoSend ? 'voice-autosend' : ''}`}><button onClick={() => void finishVoice(true)} aria-label="取消语音输入"><X size={18}/></button>{voiceAutoSend && <small className="voice-autosend-label">松开发送</small>}<span><i/>0:{String(recordSeconds).padStart(2, '0')}</span><div className="voice-bars">{voiceState === 'processing' ? '正在转录语音…' : voiceInterim || (voiceAutoSend ? '松开发送' : '正在聆听…')}</div><button className="composer-send" onClick={() => void finishVoice()} aria-label="完成语音输入"><ArrowUp size={16}/></button></div> : <div className={`ai-composer ${draggingFiles ? 'file-drop-active' : ''}`}>
+        {draggingFiles && <div className="file-drop-hint"><Paperclip size={15}/><span>拖入文件发送给 Hermes</span></div>}
+        {!!attachments.length && <div className="attachment-list" aria-label="已添加附件">{attachments.map(item => <div className={`attachment-chip ${item.status}`} key={item.id}><FileText size={15}/><span><b>{item.name}</b><small>{item.error || (item.status === 'uploading' ? '正在上传至主控端…' : formatFileSize(item.size))}</small></span>{item.status === 'uploading' ? <LoaderCircle className="attachment-spinner" size={14}/> : item.status === 'ready' ? <Check size={14}/> : <span className="attachment-failed">!</span>}<button type="button" onClick={() => setAttachments(items => items.filter(current => current.id !== item.id))} aria-label={`移除 ${item.name}`}><Trash2 size={13}/></button></div>)}</div>}
+        {voiceReview && <div className="voice-review" aria-label="语音转录已就绪"><Mic size={15}/><span><b>语音转录内容</b><small>发送前可再次编辑</small></span><button type="button" onClick={() => { setVoiceReview(''); setDraft('') }} aria-label="放弃语音转录"><X size={14}/></button></div>}
+        <textarea ref={textareaRef} value={draft} disabled={sending || voiceState !== 'idle'} rows={1} placeholder="向 Hermes 提问… 输入 / 触发指令" onChange={event => setDraft(event.target.value)} onKeyDown={handleComposerKeyDown}/>
         <div className="composer-toolbar">
-          <input ref={fileInputRef} className="attachment-input" type="file" multiple onChange={onFileInput} aria-label="Choose files to attach"/>
-          <button className={`composer-icon ${attachments.length ? 'attachment-active' : ''}`} disabled={sending || voiceState !== 'idle'} title="Attach files" onClick={() => fileInputRef.current?.click()} aria-label="Attach files"><Paperclip size={17}/></button>
-          <button className="composer-selector" onClick={() => { setModelMenu(value => !value); setReasoningMenu(false) }}><span>{model || 'Default model'}</span><ChevronDown size={13}/></button>
+          <input ref={fileInputRef} className="attachment-input" type="file" multiple onChange={onFileInput} aria-label="选择文件附件"/>
+          <button className={`composer-icon ${attachments.length ? 'attachment-active' : ''}`} disabled={sending || voiceState !== 'idle'} title="添加附件" onClick={() => fileInputRef.current?.click()} aria-label="添加附件"><Paperclip size={17}/></button>
+          <button className="composer-selector" onClick={() => { setModelMenu(value => !value); setReasoningMenu(false) }}><span>{model || '默认模型'}</span><ChevronDown size={13}/></button>
           <button className="composer-selector effort" onClick={() => { setReasoningMenu(value => !value); setModelMenu(false) }}><BrainCircuit size={14}/><span>{labelReasoning(reasoning)}</span><ChevronDown size={13}/></button>
           <span className="toolbar-spacer"/>
-          {!draft && !sending && <button className="composer-icon voice-trigger" disabled={voiceState !== 'idle'} title="Tap to dictate. Hold for 2.5 seconds to dictate and send." onPointerDown={onMicPointerDown} onPointerUp={onMicPointerUp} onPointerCancel={onMicPointerUp} onClick={onMicClick} aria-label="Record voice. Hold for 2.5 seconds to auto-send"><Mic size={17}/></button>}
-          {sending ? <button className="composer-send stop" onClick={stop} aria-label="Stop Hermes"><Square size={12} fill="currentColor"/></button> : <button className="composer-send" disabled={!draft.trim() && !attachments.some(item => item.status === 'ready')} onClick={() => void submitWithAttachments()} aria-label="Send message"><ArrowUp size={17}/></button>}
+          {!draft && !sending && <button className="composer-icon voice-trigger" disabled={voiceState !== 'idle'} title="轻触语音输入，长按 2.5 秒松手自动发送" onPointerDown={onMicPointerDown} onPointerUp={onMicPointerUp} onPointerCancel={onMicPointerUp} onClick={onMicClick} aria-label="录音输入。长按 2.5 秒松手自动发送"><Mic size={17}/></button>}
+          {sending ? <button className="composer-send stop" onClick={stop} aria-label="停止响应"><Square size={12} fill="currentColor"/></button> : <button className="composer-send" disabled={!draft.trim() && !attachments.some(item => item.status === 'ready')} onClick={() => void submitWithAttachments()} aria-label="发送消息"><ArrowUp size={17}/></button>}
         </div>
       </div>}
     </footer>
