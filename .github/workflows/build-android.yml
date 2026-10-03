@@ -101,12 +101,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v0.1.1-zh
-          name: Hermes 移动端 (中文汉化与专属图标版) v0.1.1
+          tag_name: v0.1.2-zh
+          name: Hermes 移动端 (中文版) v0.1.2
           body: |
-            ### Hermes 移动端 (Hermes Mobile) 中文汉化与定制版
+            ### Hermes 移动端 (Hermes Mobile) 中文定制版 v0.1.2
 
-            - **专属图标**：赛博机能神使灵羊（曜石黑切面 + 额前发光 AI 核心 + 展开神羽）
+            - **经典图标**：还原 Hermes 官方原版经典图标
+            - **字体大小调节**：新增 50%（极小）、65%（超小）、75%（较小）、85%（紧凑）、100%（标准）、115%（宽松）多档调节与本地持久化记忆
             - **全量汉化**：智能体控制台、实时对话、工具调用、SOUL 设定、能力管理、定时任务、连接配置 100% 地道中文
             - **架构**：React 19 + Tauri v2 + Android ARM64
             - **开箱即用**：适用于所有现代 Android 手机 (arm64-v8a)
