@@ -20,6 +20,7 @@ import { connectAndSubmit, createProfile, interruptSession, loadMessages, loadSn
 type Tab = 'bots' | 'sessions' | 'tasks'
 type DraftBot = { role: string; name: string; description: string; soul: string; model: string; provider: string; shape: string }
 type Theme = 'dark' | 'light' | 'grey' | 'aurora'
+type FontScale = '50' | '65' | '75' | '85' | '100' | '115'
 export type ToolActivity = { id: string; name: string; status: 'running' | 'done' | 'failed'; duration_s?: number; summary?: string }
 
 const titleize = (value: string) => value.split(/[-_]+/).filter(Boolean).map(part => part[0].toUpperCase() + part.slice(1)).join(' ')
@@ -84,6 +85,7 @@ export default function App() {
     model: '', provider: '', shape: 'blobatar',
   })
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('hermes-mobile-theme') as Theme | null) || 'dark')
+  const [fontScale, setFontScale] = useState<FontScale>(() => (localStorage.getItem('hermes-mobile-font-scale') as FontScale | null) || '100')
   const [rosterPullDistance, setRosterPullDistance] = useState(0)
   const [rosterPullRefreshing, setRosterPullRefreshing] = useState(false)
   const rosterScrollRef = useRef<HTMLDivElement | null>(null)
@@ -121,6 +123,11 @@ export default function App() {
     document.documentElement.dataset.theme = theme
     localStorage.setItem('hermes-mobile-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    document.documentElement.dataset.fontScale = fontScale
+    localStorage.setItem('hermes-mobile-font-scale', fontScale)
+  }, [fontScale])
   const activateEndpoint = (endpoint: string) => {
     const normalized = endpoint.replace(/\/$/, '')
     activeEndpointRef.current = normalized
@@ -371,7 +378,7 @@ export default function App() {
   }
 
   if (createOpen) return <CreateWizard step={createStep} setStep={setCreateStep} draft={botDraft} setDraft={setBotDraft} creating={creating} error={error} close={() => { setCreateOpen(false); setCreateStep(0); setError('') }} finish={() => void finishCreate()}/>
-  if (settings) return <ConnectionSettings profiles={profiles.length} sessions={sessions.length} connected={connectionStatus === 'connected'} endpoint={activeEndpoint !== 'http://127.0.0.1:9119' ? activeEndpoint : undefined} theme={theme} setTheme={setTheme} close={() => setSettings(false)} refresh={() => refresh()} onPairingBusy={setPairingBusyState} onPaired={async endpoint => { const normalized = activateEndpoint(endpoint); const data = await refresh(normalized, true); if (!data) throw new Error(lastConnectionErrorRef.current || '已登录，但 Hermes REST 或 WebSocket 鉴权验证失败。'); localStorage.setItem('hermes-mobile-active-endpoint', normalized) }}/>
+  if (settings) return <ConnectionSettings profiles={profiles.length} sessions={sessions.length} connected={connectionStatus === 'connected'} endpoint={activeEndpoint !== 'http://127.0.0.1:9119' ? activeEndpoint : undefined} theme={theme} setTheme={setTheme} fontScale={fontScale} setFontScale={setFontScale} close={() => setSettings(false)} refresh={() => refresh()} onPairingBusy={setPairingBusyState} onPaired={async endpoint => { const normalized = activateEndpoint(endpoint); const data = await refresh(normalized, true); if (!data) throw new Error(lastConnectionErrorRef.current || '已登录，但 Hermes REST 或 WebSocket 鉴权验证失败。'); localStorage.setItem('hermes-mobile-active-endpoint', normalized) }}/>
   if (selected && profileSheet) return <BotProfileSheet profile={profiles.find(profile => profile.name === selected.profile)} session={selected} onClose={() => setProfileSheet(false)} onUpdated={() => void refresh()}/>
   if (selected) return <ChatView session={selected} conversationLoading={conversationLoading} messages={messages} settledAssistant={settledAssistant?.sessionId === selected.id && settledAssistant.profile === selected.profile ? settledAssistant : null} profiles={profiles} streaming={streaming} sending={sending} toolActivities={toolActivities} error={error} back={() => setSelected(null)} refresh={() => void openSession(selected)} openProfile={() => setProfileSheet(true)} onSessionModelChange={handleSessionModelChange} submit={submit} submitVoice={submitVoice} stop={stop}/>
   if (tab === 'tasks') return <TasksView back={() => setTab('bots')} profiles={profiles}/>

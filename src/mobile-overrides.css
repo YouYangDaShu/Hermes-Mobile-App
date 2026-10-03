@@ -19,3 +19,51 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,#root::-webkit-scrollbar{display
 /* Never show desktop-style vertical scrollbar chrome in mobile surfaces; scrolling remains touch/wheel/keyboard accessible. */
 .profile-sheet,.profile-model-picker,.profile-soul textarea,.management-sheet,.tasks-sheet,.task-detail,.task-create-scroll,.task-delivery-list,.thread-scroll,.mention-panel,.app.chat-shell .model-list,.app.chat-shell .slash-popover{scrollbar-width:none}
 .profile-sheet::-webkit-scrollbar,.profile-model-picker::-webkit-scrollbar,.profile-soul textarea::-webkit-scrollbar,.management-sheet::-webkit-scrollbar,.tasks-sheet::-webkit-scrollbar,.task-detail::-webkit-scrollbar,.task-create-scroll::-webkit-scrollbar,.task-delivery-list::-webkit-scrollbar,.thread-scroll::-webkit-scrollbar,.mention-panel::-webkit-scrollbar,.app.chat-shell .model-list::-webkit-scrollbar,.app.chat-shell .slash-popover::-webkit-scrollbar{width:0}
+
+/* Dynamic Font Scaling across chat, messages, composer, and panels */
+:root {
+  --font-scale: 1;
+}
+:root[data-font-scale='50'] { --font-scale: 0.50; }
+:root[data-font-scale='65'] { --font-scale: 0.65; }
+:root[data-font-scale='75'] { --font-scale: 0.75; }
+:root[data-font-scale='85'] { --font-scale: 0.85; }
+:root[data-font-scale='100'] { --font-scale: 1.00; }
+:root[data-font-scale='115'] { --font-scale: 1.15; }
+
+.outgoing { font-size: calc(17px * var(--font-scale)) !important; line-height: 1.42 !important; }
+.incoming { font-size: calc(17px * var(--font-scale)) !important; line-height: 1.55 !important; }
+.markdown-body { font-size: calc(14px * var(--font-scale)) !important; line-height: 1.62 !important; }
+.user-bubble .markdown-body { font-size: calc(14px * var(--font-scale)) !important; line-height: 1.48 !important; }
+.markdown-body h1 { font-size: calc(22px * var(--font-scale)) !important; }
+.markdown-body h2 { font-size: calc(18px * var(--font-scale)) !important; }
+.markdown-body h3 { font-size: calc(15px * var(--font-scale)) !important; }
+.markdown-body table { font-size: calc(12px * var(--font-scale)) !important; }
+.code-block code { font-size: calc(12.5px * var(--font-scale)) !important; }
+.code-head { font-size: calc(11px * var(--font-scale)) !important; }
+.reasoning { font-size: calc(13px * var(--font-scale)) !important; }
+.thinking-copy { font-size: calc(12px * var(--font-scale)) !important; }
+.thinking-title b { font-size: calc(12px * var(--font-scale)) !important; }
+.thinking-title em { font-size: calc(11px * var(--font-scale)) !important; }
+.tool { font-size: calc(13px * var(--font-scale)) !important; }
+.tool-card b { font-size: calc(12px * var(--font-scale)) !important; }
+.tool-card small { font-size: calc(10px * var(--font-scale)) !important; }
+.live-tool b { font-size: calc(12px * var(--font-scale)) !important; }
+.live-tool small { font-size: calc(10px * var(--font-scale)) !important; }
+.response-stats { font-size: calc(10px * var(--font-scale)) !important; }
+.message-time { font-size: calc(10px * var(--font-scale)) !important; }
+.ai-composer textarea { font-size: calc(14px * var(--font-scale)) !important; }
+.composer input { font-size: calc(16px * var(--font-scale)) !important; }
+.bot-copy b { font-size: calc(16px * var(--font-scale)) !important; }
+.bot-copy small { font-size: calc(13px * var(--font-scale)) !important; }
+.chat-title b { font-size: calc(14px * var(--font-scale)) !important; }
+.chat-title small { font-size: calc(11px * var(--font-scale)) !important; }
+.tabs button { font-size: calc(14px * var(--font-scale)) !important; }
+.search input { font-size: calc(14px * var(--font-scale)) !important; }
+.menu-list button { font-size: calc(15px * var(--font-scale)) !important; }
+.menu-list button span { font-size: calc(14px * var(--font-scale)) !important; }
+.stats b { font-size: calc(22px * var(--font-scale)) !important; }
+.stats span { font-size: calc(12px * var(--font-scale)) !important; }
+.connection-card p, .connection-card code { font-size: calc(13px * var(--font-scale)) !important; }
+.fine { font-size: calc(12px * var(--font-scale)) !important; }
+

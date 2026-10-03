@@ -10,6 +10,7 @@ import { nativeSignIn, passwordSignIn, probeHermesGateway } from '../hermes'
 const HermesMobileLogo = HermesMobileAboutMark
 
 type Theme = 'dark' | 'light' | 'grey' | 'aurora'
+type FontScale = '50' | '65' | '75' | '85' | '100' | '115'
 type Page = 'root' | 'pairing' | 'about'
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   endpoint?: string
   theme: Theme
   setTheme: (theme: Theme) => void
+  fontScale: FontScale
+  setFontScale: (scale: FontScale) => void
   close: () => void
   refresh: () => Promise<unknown>
   onPairingBusy: (busy: boolean) => void
@@ -30,6 +33,15 @@ const themes: Array<{ id: Theme; label: string; description: string }> = [
   { id: 'light', label: '浅色', description: '层次分明的冷灰蓝面板' },
   { id: 'grey', label: '石墨灰', description: '极简中性灰质感' },
   { id: 'aurora', label: '极光', description: '深海夜空配青紫流光' },
+]
+
+const fontScales: Array<{ id: FontScale; label: string; description: string }> = [
+  { id: '50', label: '50% 极小', description: '超紧凑排版，一屏展示海量信息' },
+  { id: '65', label: '65% 超小', description: '显著缩小文本，大幅降低系统字号偏大感' },
+  { id: '75', label: '75% 较小', description: '轻巧紧凑，兼顾阅读舒适与高信息密度' },
+  { id: '85', label: '85% 紧凑', description: '微缩适中，推荐大多数手机获得细腻排版' },
+  { id: '100', label: '100% 标准', description: '默认原始字号' },
+  { id: '115', label: '115% 宽松', description: '清晰大字号模式，方便轻松阅读' },
 ]
 
 const external = (href: string) => ({ href, onClick: (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); void invoke('open_external_url', { url: href }).catch(() => window.open(href, '_blank', 'noopener,noreferrer')) } })
@@ -49,7 +61,7 @@ function AboutHermesMobile({ back }: { back: () => void }) {
     <section className="about-hero">
       <div className="about-logo-card"><img src={HermesMobileLogo} alt="Hermes Mobile 徽标"/></div>
       <h1>Hermes 移动端</h1>
-      <p className="about-meta">Hermes Agent 随身控制台 <i aria-hidden="true">|</i> 版本 0.1.1</p>
+      <p className="about-meta">Hermes Agent 随身控制台 <i aria-hidden="true">|</i> 版本 0.1.2</p>
       <span>随时随地掌握你的 Hermes Agent 工作空间。</span>
     </section>
     <section className="about-story">
@@ -162,11 +174,12 @@ function PairingSettings({ back, onPaired, onPairingBusy, initialEndpoint }: { b
   </main>
 }
 
-export function ConnectionSettings({ profiles, sessions, connected, endpoint, theme, setTheme, close, refresh, onPairingBusy, onPaired }: Props) {
+export function ConnectionSettings({ profiles, sessions, connected, endpoint, theme, setTheme, fontScale, setFontScale, close, refresh, onPairingBusy, onPaired }: Props) {
   const shellRef = useRef<HTMLElement>(null)
   useEdgeSwipeBack(shellRef, close, true)
   const [page, setPage] = useState<Page>('root')
   const [showThemes, setShowThemes] = useState(false)
+  const [showFontScale, setShowFontScale] = useState(false)
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
   useEffect(() => {
     const onMobileBack = (event: Event) => {
@@ -200,7 +213,7 @@ export function ConnectionSettings({ profiles, sessions, connected, endpoint, th
       <button className={`primary wide connection-sync-button ${syncState}`} disabled={connected && syncState === 'syncing'} aria-busy={connected && syncState === 'syncing'} onClick={connected ? () => void syncNow() : endpoint ? () => void refresh() : () => setPage('pairing')}>{connected ? syncState === 'syncing' ? <><LoaderCircle className="connection-sync-spinner" size={17}/> 正在同步…</> : syncState === 'success' ? <><CheckCircle2 size={17}/> 同步完成</> : '立即同步' : endpoint ? '重试已保存的连接' : '配置连接与配对'}</button>
       {connected && syncState !== 'idle' && <p className={`connection-sync-result ${syncState}`} role="status">{syncState === 'syncing' ? '正在刷新实时 Hermes 数据…' : syncState === 'success' ? '刚刚已与 Hermes 主控同步完成。' : '同步未能完成，请检查网关连接后重试。'}</p>}
     </section>
-    <section className="menu-list"><button>通知设置 <span>›</span></button><button onClick={() => setShowThemes(value => !value)}>外观主题 <span>{themes.find(item => item.id === theme)?.label} ›</span></button>{showThemes && <div className="theme-picker">{themes.map(item => <button className={item.id === theme ? 'selected' : ''} onClick={() => setTheme(item.id)} key={item.id}><span className={`theme-swatch theme-${item.id}`}/><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === theme ? '✓' : ''}</i></button>)}</div>}<button onClick={() => setPage('pairing')}>安全与配对 <span className={connected ? '' : 'connection-attention'}>{connected ? '已连接 ›' : '未连接 ›'}</span></button><button onClick={() => setPage('about')}>关于 Hermes 移动端 <span>0.1.1 ›</span></button></section>
+    <section className="menu-list"><button>通知设置 <span>›</span></button><button onClick={() => setShowThemes(value => !value)}>外观主题 <span>{themes.find(item => item.id === theme)?.label} ›</span></button>{showThemes && <div className="theme-picker">{themes.map(item => <button className={item.id === theme ? 'selected' : ''} onClick={() => setTheme(item.id)} key={item.id}><span className={`theme-swatch theme-${item.id}`}/><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === theme ? '✓' : ''}</i></button>)}</div>}<button onClick={() => setShowFontScale(value => !value)}>字体大小 <span>{fontScales.find(item => item.id === fontScale)?.label} ›</span></button>{showFontScale && <div className="font-scale-picker">{fontScales.map(item => <button className={item.id === fontScale ? 'selected' : ''} onClick={() => setFontScale(item.id)} key={item.id}><span className="font-scale-badge">{item.id}%</span><span><b>{item.label}</b><small>{item.description}</small></span><i>{item.id === fontScale ? '✓' : ''}</i></button>)}</div>}<button onClick={() => setPage('pairing')}>安全与配对 <span className={connected ? '' : 'connection-attention'}>{connected ? '已连接 ›' : '未连接 ›'}</span></button><button onClick={() => setPage('about')}>关于 Hermes 移动端 <span>0.1.2 ›</span></button></section>
     <p className="fine">主控端负责驱动模型、凭证、工具调用、记忆与技能。移动客户端作为远程交互面板。</p>
   </main>
 }
